@@ -75,10 +75,14 @@ import org.apache.iceberg.rest.responses.OAuthTokenResponse;
 import org.apache.iceberg.rest.responses.UpdateNamespacePropertiesResponse;
 import org.apache.iceberg.util.Pair;
 import org.apache.iceberg.util.PropertyUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Adaptor class to translate REST requests into {@link Catalog} API calls. */
 public class RESTCatalogAdapter extends BaseHTTPClient {
   private static final Splitter SLASH = Splitter.on('/');
+  // Zuoru: add Logger for RESTCatalogAdapter to print
+  private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogAdapter.class);
 
   private static final Map<Class<? extends Exception>, Integer> EXCEPTION_ERROR_CODES =
       ImmutableMap.<Class<? extends Exception>, Integer>builder()
