@@ -20,6 +20,8 @@ package org.apache.iceberg.rest;
 
 import static java.lang.String.format;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServlet;
@@ -172,7 +174,7 @@ public class RESTCatalogServlet extends HttpServlet {
       this.body = body;
     }
 
-    // add an inner class to cache servlet request
+    // Zuoru: add an inner class to cache servlet request
     public static class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
       private final byte[] cachedBody;
 
@@ -219,10 +221,20 @@ public class RESTCatalogServlet extends HttpServlet {
       }
     }
 
+    // Zuoru: function to print JSON pretty
+    private static void LogPrettyJson(String jsonString) throws JsonProcessingException {
+      if (!jsonString.isEmpty()) {
+        ObjectMapper mapper = new ObjectMapper();
+        Object jsonObject = mapper.readValue(jsonString, Object.class);
+        String prettyJsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+        LOG.error("Zuoru: format JSON:\n{}", prettyJsonString);
+      }
+    }
+
     // Zuoru: function to convert HttpServletRequest to JSON body
     static private HttpServletRequest CacheRequestJson(HttpServletRequest request) {
       StringBuilder jsonBuilder = new StringBuilder();
-      byte[] cachedBody = null;
+      byte[] cachedBody;
 
       try (BufferedReader reader = request.getReader()) {
         String line;
@@ -233,9 +245,7 @@ public class RESTCatalogServlet extends HttpServlet {
         String jsonString = jsonBuilder.toString();
         cachedBody = jsonString.getBytes(request.getCharacterEncoding() != null ?
                 request.getCharacterEncoding() : StandardCharsets.UTF_8.name());
-        if (!jsonString.isEmpty()) {
-          LOG.error("Zuoru: body json: {}", jsonString);
-        }
+        LogPrettyJson(jsonString);
       } catch (IOException e) {
         // handle exception
         LOG.error("read request body failed", e);
@@ -249,7 +259,7 @@ public class RESTCatalogServlet extends HttpServlet {
       String path = request.getRequestURI().substring(1);
       Pair<Route, Map<String, String>> routeContext = Route.from(method, path);
       // Zuoru: add log for translate HttpServletRequest to ServletRequestContext
-      LOG.error("Zuoru: method: {}, path: {}", method.toString(), path);
+      LOG.error("Zuoru: method: {}, path: {}", method, path);
       request = CacheRequestJson(request);
 
       if (routeContext == null) {
