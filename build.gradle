@@ -1123,6 +1123,8 @@ project(':iceberg-open-api') {
   check.dependsOn('validateRESTCatalogSpec')
 
   shadowJar {
+    mergeServiceFiles()
+
     archiveBaseName.set("iceberg-open-api-test-fixtures-runtime")
     archiveClassifier.set(null)
     configurations = [project.configurations.testFixturesRuntimeClasspath]

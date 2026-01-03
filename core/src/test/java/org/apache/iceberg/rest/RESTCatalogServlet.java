@@ -63,7 +63,7 @@ public class RESTCatalogServlet extends HttpServlet {
 
   private final RESTCatalogAdapter restCatalogAdapter;
   private final Map<String, String> responseHeaders =
-          ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+      ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
 
   public RESTCatalogServlet(RESTCatalogAdapter restCatalogAdapter) {
     this.restCatalogAdapter = restCatalogAdapter;
@@ -71,30 +71,30 @@ public class RESTCatalogServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-          throws IOException {
+      throws IOException {
     execute(ServletRequestContext.from(request), response);
   }
 
   @Override
   protected void doHead(HttpServletRequest request, HttpServletResponse response)
-          throws IOException {
+      throws IOException {
     execute(ServletRequestContext.from(request), response);
   }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws IOException {
+      throws IOException {
     execute(ServletRequestContext.from(request), response);
   }
 
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-          throws IOException {
+      throws IOException {
     execute(ServletRequestContext.from(request), response);
   }
 
   protected void execute(ServletRequestContext context, HttpServletResponse response)
-          throws IOException {
+      throws IOException {
     response.setStatus(HttpServletResponse.SC_OK);
     responseHeaders.forEach(response::setHeader);
 
@@ -107,20 +107,19 @@ public class RESTCatalogServlet extends HttpServlet {
     try {
 
       HTTPRequest request =
-              restCatalogAdapter.buildRequest(
-                      context.method(),
-                      context.path(),
-                      context.queryParams(),
-                      context.headers(),
-                      context.body());
+          restCatalogAdapter.buildRequest(
+              context.method(),
+              context.path(),
+              context.queryParams(),
+              context.headers(),
+              context.body());
       // Zuoru: add log to print request body
       if (context.body() != null) {
         LOG.error("Zuoru: " + context.body().toString());
       }
       Object responseBody =
-              restCatalogAdapter.execute(
-                      request, context.route().responseClass(), handle(response), h -> {
-                      });
+          restCatalogAdapter.execute(
+              request, context.route().responseClass(), handle(response), h -> {});
 
       if (responseBody != null) {
         RESTObjectMapper.mapper().writeValue(response.getWriter(), responseBody);
@@ -160,12 +159,12 @@ public class RESTCatalogServlet extends HttpServlet {
     }
 
     private ServletRequestContext(
-            HTTPMethod method,
-            Route route,
-            String path,
-            Map<String, String> headers,
-            Map<String, String> queryParams,
-            Object body) {
+        HTTPMethod method,
+        Route route,
+        String path,
+        Map<String, String> headers,
+        Map<String, String> queryParams,
+        Object body) {
       this.method = method;
       this.route = route;
       this.path = path;
@@ -191,13 +190,14 @@ public class RESTCatalogServlet extends HttpServlet {
       @Override
       public BufferedReader getReader() throws UnsupportedEncodingException {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(cachedBody);
-        return new BufferedReader(new InputStreamReader(byteArrayInputStream, getCharacterEncoding()));
+        return new BufferedReader(
+            new InputStreamReader(byteArrayInputStream, getCharacterEncoding()));
       }
 
       private static class CachedBodyServletInputStream extends ServletInputStream {
         private final ByteArrayInputStream byteArrayInputStream;
 
-        public CachedBodyServletInputStream(byte[] cachedBody) {
+        CachedBodyServletInputStream(byte[] cachedBody) {
           this.byteArrayInputStream = new ByteArrayInputStream(cachedBody);
         }
 
@@ -217,22 +217,25 @@ public class RESTCatalogServlet extends HttpServlet {
         }
 
         @Override
-        public void setReadListener(ReadListener listener) { /* 不实现 */ }
+        public void setReadListener(ReadListener listener) {
+          /* 不实现 */
+        }
       }
     }
 
     // Zuoru: function to print JSON pretty
-    private static void LogPrettyJson(String jsonString) throws JsonProcessingException {
+    private static void logPrettyJson(String jsonString) throws JsonProcessingException {
       if (!jsonString.isEmpty()) {
         ObjectMapper mapper = new ObjectMapper();
         Object jsonObject = mapper.readValue(jsonString, Object.class);
-        String prettyJsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+        String prettyJsonString =
+            mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
         LOG.error("Zuoru: format JSON:\n{}", prettyJsonString);
       }
     }
 
     // Zuoru: function to convert HttpServletRequest to JSON body
-    static private HttpServletRequest CacheRequestJson(HttpServletRequest request) {
+    private static HttpServletRequest cacheRequestJson(HttpServletRequest request) {
       StringBuilder jsonBuilder = new StringBuilder();
       byte[] cachedBody;
 
@@ -243,9 +246,12 @@ public class RESTCatalogServlet extends HttpServlet {
         }
         // keep encoding same
         String jsonString = jsonBuilder.toString();
-        cachedBody = jsonString.getBytes(request.getCharacterEncoding() != null ?
-                request.getCharacterEncoding() : StandardCharsets.UTF_8.name());
-        LogPrettyJson(jsonString);
+        cachedBody =
+            jsonString.getBytes(
+                request.getCharacterEncoding() != null
+                    ? request.getCharacterEncoding()
+                    : StandardCharsets.UTF_8.name());
+        logPrettyJson(jsonString);
       } catch (IOException e) {
         // handle exception
         LOG.error("read request body failed", e);
@@ -260,34 +266,34 @@ public class RESTCatalogServlet extends HttpServlet {
       Pair<Route, Map<String, String>> routeContext = Route.from(method, path);
       // Zuoru: add log for translate HttpServletRequest to ServletRequestContext
       LOG.error("Zuoru: method: {}, path: {}", method, path);
-      request = CacheRequestJson(request);
+      HttpServletRequest cachedRequest = cacheRequestJson(request);
 
       if (routeContext == null) {
         return new ServletRequestContext(
-                ErrorResponse.builder()
-                        .responseCode(400)
-                        .withType("BadRequestException")
-                        .withMessage(format("No route for request: %s %s", method, path))
-                        .build());
+            ErrorResponse.builder()
+                .responseCode(400)
+                .withType("BadRequestException")
+                .withMessage(format("No route for request: %s %s", method, path))
+                .build());
       }
 
       Route route = routeContext.first();
       Object requestBody = null;
       if (route.requestClass() != null) {
         requestBody =
-                RESTObjectMapper.mapper().readValue(request.getReader(), route.requestClass());
+            RESTObjectMapper.mapper().readValue(cachedRequest.getReader(), route.requestClass());
       } else if (route == Route.TOKENS) {
-        try (Reader reader = new InputStreamReader(request.getInputStream())) {
+        try (Reader reader = new InputStreamReader(cachedRequest.getInputStream())) {
           requestBody = RESTUtil.decodeFormData(CharStreams.toString(reader));
         }
       }
 
       Map<String, String> queryParams =
-              request.getParameterMap().entrySet().stream()
-                      .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()[0]));
+          cachedRequest.getParameterMap().entrySet().stream()
+              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()[0]));
       Map<String, String> headers =
-              Collections.list(request.getHeaderNames()).stream()
-                      .collect(Collectors.toMap(Function.identity(), request::getHeader));
+          Collections.list(cachedRequest.getHeaderNames()).stream()
+              .collect(Collectors.toMap(Function.identity(), cachedRequest::getHeader));
 
       return new ServletRequestContext(method, route, path, headers, queryParams, requestBody);
     }
