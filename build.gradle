@@ -1059,6 +1059,30 @@ project(':iceberg-open-api') {
       exclude group: 'commons-cli', module: 'commons-cli'
       exclude group: 'com.github.pjfanning', module: 'jersey-json'
     }
+
+    // 添加 hadoop-hdfs-client 依赖 - 这是解决 "No FileSystem for scheme 'hdfs'" 的关键
+    testFixturesImplementation(libs.hadoop3.hdfs.client) {
+      exclude group: 'org.slf4j'
+      exclude group: 'ch.qos.reload4j'
+      exclude group: 'org.apache.avro', module: 'avro'
+      exclude group: 'com.google.guava'
+      exclude group: 'com.google.protobuf'
+      exclude group: 'org.apache.curator'
+      exclude group: 'org.apache.zookeeper'
+      exclude group: 'org.apache.kerby'
+      exclude group: 'org.apache.hadoop.thirdparty', module: 'hadoop-shaded-protobuf_3_7'
+      exclude group: 'org.eclipse.jetty'
+      exclude group: 'com.google.re2j', module: 're2j'
+      exclude group: 'com.google.code.gson', module: 'gson'
+      exclude group: 'com.jcraft', module: 'jsch'
+      exclude group: 'com.google.code.findbugs', module: 'jsr305'
+      exclude group: 'io.dropwizard.metrics', module: 'metrics-core'
+      exclude group: 'dnsjava', module: 'dnsjava'
+      exclude group: 'org.xerial.snappy', module: 'snappy-java'
+      exclude group: 'commons-cli', module: 'commons-cli'
+      exclude group: 'com.github.pjfanning', module: 'jersey-json'
+    }
+
     testFixturesImplementation project(path: ':iceberg-bundled-guava', configuration: 'shadow')
     testFixturesImplementation libs.junit.jupiter
 
